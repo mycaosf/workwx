@@ -12,6 +12,6 @@ Send Messsage exmaples:
 
 	data := SendMessageDataText{ Content: "test" }
 	if err := msg.Text(&data); err != nil {
-  }
+	}
 
 ```
