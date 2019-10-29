@@ -15,11 +15,15 @@ type token struct {
 	expire time.Time
 }
 
-type accessTokenGetResponse struct {
+type baseResponse struct {
 	ErrCode int    `json:"errorcode"`
 	ErrMsg  string `json:"errmsg"`
-	Token   string `json:"access_token"`
-	Expire  int    `json:"expires_in"`
+}
+
+type accessTokenGetResponse struct {
+	baseResponse
+	Token  string `json:"access_token"`
+	Expire int    `json:"expires_in"`
 }
 
 //return token
