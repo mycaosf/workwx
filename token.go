@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"net/http"
 	"time"
 )
 
@@ -54,7 +53,7 @@ func (p *token) get() error {
 	p.token = ""
 	url := urlGetToken + "corpid=" + p.corpId + "&corpsecret=" + p.secret
 
-	resp, err := http.Get(url)
+	resp, err := httpGet(url, nil)
 	if err == nil {
 		defer resp.Body.Close()
 

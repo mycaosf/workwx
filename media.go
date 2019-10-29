@@ -90,10 +90,10 @@ func (p *Media) send(mediaType int, fileName string, temporary bool) (id string,
 	header.Add(httpc.HTTPHeaderContentType, httpContentType)
 	header.Add(httpc.HTTPHeaderContentLength, strconv.Itoa(buf.Len()))
 
-	if resp, err = httpc.Post(url, header, r, nil); err != nil {
+	if resp, err = httpPost(url, header, r); err != nil {
 		if url, err = p.buildUrl(mediaType, temporary, true); err == nil {
 			r.Seek(0, 0)
-			resp, err = httpc.Post(url, header, r, nil)
+			resp, err = httpPost(url, header, r)
 		}
 	}
 
@@ -159,16 +159,16 @@ func (p *Media) GetData(id string, from, to int) (data []byte, err error) {
 	}
 
 	if strings.HasPrefix(id, "http://") || strings.HasPrefix(id, "https://") {
-		resp, err = httpc.Get(id, header, nil)
+		resp, err = httpGet(id, header)
 	} else {
 		var token string
 		if token, err = p.Get(false); err == nil {
 			url := fmt.Sprintf(mediaUrlGet, token, id)
-			if resp, err = httpc.Get(url, header, nil); err != nil {
+			if resp, err = httpGet(url, header); err != nil {
 				if tokenNew, errNew := p.Get(true); err == nil {
 					if token != tokenNew {
 						url := fmt.Sprintf(mediaUrlGet, tokenNew, id)
-						resp, err = httpc.Get(url, header, nil)
+						resp, err = httpGet(url, header)
 					}
 				} else {
 					err = errNew

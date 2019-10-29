@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/mycaosf/utils/net/httpc"
 	"io/ioutil"
 	"net/http"
 	"strings"
 )
 
-type ErrorSendMessage struct {
+type ErrorMessage struct {
 	ErrCode      int
 	ErrMsg       string
 	InvalidUser  []string
@@ -17,7 +18,7 @@ type ErrorSendMessage struct {
 	InvalidTag   []string
 }
 
-func (p *ErrorSendMessage) Error() string {
+func (p *ErrorMessage) Error() string {
 	ret := fmt.Sprintf("errcode: %d, errmsg: %s", p.ErrCode, p.ErrMsg)
 	msgs := [][]string{p.InvalidUser, p.InvalidParty, p.InvalidTag}
 	for i := 0; i < len(msgs); i++ {
@@ -37,7 +38,7 @@ type sendMessageResponseReal struct {
 	InvalidTag   string `json:"invalidtag"`
 }
 
-type SendMessage struct {
+type Message struct {
 	token
 	toUser  []string
 	toParty []string
@@ -45,7 +46,7 @@ type SendMessage struct {
 	agentId int
 }
 
-type sendMessageDataCommonReal struct {
+type sendMessageCommonReal struct {
 	ToUser  string `json:"touser,omitempty"`
 	ToParty string `json:"toparty,omitempty"`
 	ToTag   string `json:"totag,omitempty"`
@@ -53,14 +54,14 @@ type sendMessageDataCommonReal struct {
 	AgentId int    `json:"agentid"`
 }
 
-type SendMessageDataText struct {
+type MessageText struct {
 	Content string //max 2048 bytes
 	Safe    bool
 	IdTrans bool
 }
 
-type sendMessageDataTextReal struct {
-	sendMessageDataCommonReal
+type sendMessageTextReal struct {
+	sendMessageCommonReal
 	Text    ContentText `json:"text"`
 	Safe    int         `json:"safe, omitempty"`
 	IdTrans int         `json:"enable_id_trans,omitempty"`
@@ -70,29 +71,29 @@ type ContentText struct {
 	Content string `json:"content"`
 }
 
-type SendMessageDataMarkdown struct {
+type MessageMarkdown struct {
 	Content string //max 2048 bytes
 }
 
-type sendMessageDataMarkdownReal struct {
-	sendMessageDataCommonReal
+type sendMessageMarkdownReal struct {
+	sendMessageCommonReal
 	Markdown ContentText `json:"markdown"`
 }
 
-func (p *SendMessage) SetReceiver(user, party, tag []string) {
+func (p *Message) SetReceiver(user, party, tag []string) {
 	p.toUser = user
 	p.toParty = party
 	p.toTag = tag
 }
 
-func (p *SendMessage) SetAgentId(agentId int) {
+func (p *Message) SetAgentId(agentId int) {
 	p.agentId = agentId
 }
 
 //send text message
-func (p *SendMessage) Text(text *SendMessageDataText) error {
-	var data sendMessageDataTextReal
-	p.toRealCommon(&data.sendMessageDataCommonReal, "text")
+func (p *Message) Text(text *MessageText) error {
+	var data sendMessageTextReal
+	p.toRealCommon(&data.sendMessageCommonReal, "text")
 
 	data.Text.Content = text.Content
 	if text.Safe {
@@ -105,7 +106,7 @@ func (p *SendMessage) Text(text *SendMessageDataText) error {
 	return p.send(&data)
 }
 
-func (p *SendMessage) toRealCommon(to *sendMessageDataCommonReal, msgType string) {
+func (p *Message) toRealCommon(to *sendMessageCommonReal, msgType string) {
 	if p.toUser != nil {
 		to.ToUser = strings.Join(p.toUser, toJoinStr)
 	}
@@ -119,7 +120,7 @@ func (p *SendMessage) toRealCommon(to *sendMessageDataCommonReal, msgType string
 	to.AgentId = p.agentId
 }
 
-func (p *SendMessage) send(data interface{}) error {
+func (p *Message) send(data interface{}) error {
 	if buf, err := json.Marshal(data); err != nil {
 		return err
 	} else {
@@ -131,15 +132,17 @@ func (p *SendMessage) send(data interface{}) error {
 
 		url := urlSendMessage + token
 		buffer := bytes.NewReader(buf)
+		header := make(http.Header)
+		header.Add(httpc.HTTPHeaderContentType, contentJson)
 
-		if resp, err = http.Post(url, contentJson, buffer); err != nil {
+		if resp, err = httpPost(url, header, buffer); err != nil {
 			buffer.Seek(0, 0)
 			if token, err = p.Get(true); err != nil {
 				return err
 			}
 
 			url = urlSendMessage + token
-			if resp, err = http.Post(url, contentJson, buffer); err != nil {
+			if resp, err = httpPost(url, header, buffer); err != nil {
 				return err
 			}
 
@@ -156,7 +159,7 @@ func sendMessageRet(resp *http.Response) (err error) {
 		var r sendMessageResponseReal
 		if err = json.Unmarshal(body, &r); err == nil {
 			if r.ErrCode != 0 {
-				ret := &ErrorSendMessage{ErrCode: r.ErrCode, ErrMsg: r.ErrMsg}
+				ret := &ErrorMessage{ErrCode: r.ErrCode, ErrMsg: r.ErrMsg}
 				if r.InvalidUser != "" {
 					ret.InvalidUser = strings.Split(r.InvalidUser, toJoinStr)
 				}
@@ -176,9 +179,9 @@ func sendMessageRet(resp *http.Response) (err error) {
 }
 
 //send markdown message
-func (p *SendMessage) Markdown(markdown *SendMessageDataMarkdown) error {
-	var data sendMessageDataMarkdownReal
-	p.toRealCommon(&data.sendMessageDataCommonReal, "markdown")
+func (p *Message) Markdown(markdown *MessageMarkdown) error {
+	var data sendMessageMarkdownReal
+	p.toRealCommon(&data.sendMessageCommonReal, "markdown")
 	data.Markdown.Content = markdown.Content
 
 	return p.send(&data)
