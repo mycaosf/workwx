@@ -80,10 +80,14 @@ type sendMessageMarkdownReal struct {
 	Markdown ContentText `json:"markdown"`
 }
 
-func (p *Message) SetReceiver(user, party, tag []string) {
-	p.toUser = user
-	p.toParty = party
-	p.toTag = tag
+//receivers: user, party, tag
+func (p *Message) SetReceiver(receivers ...[]string) {
+	for len(receivers) < 3 {
+		receivers = append(receivers, nil)
+	}
+	p.toUser = receivers[0]
+	p.toParty = receivers[1]
+	p.toTag = receivers[2]
 }
 
 func (p *Message) SetAgentId(agentId int) {
