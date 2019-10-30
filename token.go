@@ -1,9 +1,7 @@
 package workwx
 
 import (
-	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"time"
 )
 
@@ -53,17 +51,10 @@ func (p *token) get() error {
 	p.token = ""
 	url := urlGetToken + "corpid=" + p.corpId + "&corpsecret=" + p.secret
 
-	resp, err := httpGet(url, nil)
+	err := httpGetJson(url, nil, &ret)
 	if err == nil {
-		defer resp.Body.Close()
-
-		var body []byte
-		if body, err = ioutil.ReadAll(resp.Body); err == nil {
-			if err = json.Unmarshal(body, &ret); err == nil {
-				p.token = ret.Token
-				p.expire = time.Now().Add(time.Duration(ret.Expire) * time.Second)
-			}
-		}
+		p.token = ret.Token
+		p.expire = time.Now().Add(time.Duration(ret.Expire) * time.Second)
 	}
 
 	return err

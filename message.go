@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/mycaosf/utils/net/httpc"
-	"io/ioutil"
 	"net/http"
 	"strings"
 )
@@ -129,7 +128,6 @@ func (p *Message) send(data interface{}) error {
 		return err
 	} else {
 		var token string
-		var resp *http.Response
 		if token, err = p.Get(false); err != nil {
 			return err
 		}
@@ -139,44 +137,37 @@ func (p *Message) send(data interface{}) error {
 		header := make(http.Header)
 		header.Add(httpc.HTTPHeaderContentType, contentJson)
 
-		if resp, err = httpPost(url, header, buffer); err != nil {
+		var r sendMessageResponseReal
+		if err = httpPostJson(url, header, buffer, &r); err != nil {
 			buffer.Seek(0, 0)
 			if token, err = p.Get(true); err != nil {
 				return err
 			}
 
 			url = urlSendMessage + token
-			if resp, err = httpPost(url, header, buffer); err != nil {
+			if err = httpPostJson(url, header, buffer, &r); err != nil {
 				return err
 			}
-
 		}
 
-		return sendMessageRet(resp)
+		return sendMessageRet(&r)
 	}
 }
 
-func sendMessageRet(resp *http.Response) (err error) {
-	defer resp.Body.Close()
-	var body []byte
-	if body, err = ioutil.ReadAll(resp.Body); err == nil {
-		var r sendMessageResponseReal
-		if err = json.Unmarshal(body, &r); err == nil {
-			if r.ErrCode != 0 {
-				ret := &ErrorMessage{ErrCode: r.ErrCode, ErrMsg: r.ErrMsg}
-				if r.InvalidUser != "" {
-					ret.InvalidUser = strings.Split(r.InvalidUser, toJoinStr)
-				}
-				if r.InvalidParty != "" {
-					ret.InvalidParty = strings.Split(r.InvalidParty, toJoinStr)
-				}
-				if r.InvalidTag != "" {
-					ret.InvalidTag = strings.Split(r.InvalidTag, toJoinStr)
-				}
-
-				err = ret
-			}
+func sendMessageRet(r *sendMessageResponseReal) (err error) {
+	if r.ErrCode != 0 {
+		ret := &ErrorMessage{ErrCode: r.ErrCode, ErrMsg: r.ErrMsg}
+		if r.InvalidUser != "" {
+			ret.InvalidUser = strings.Split(r.InvalidUser, toJoinStr)
 		}
+		if r.InvalidParty != "" {
+			ret.InvalidParty = strings.Split(r.InvalidParty, toJoinStr)
+		}
+		if r.InvalidTag != "" {
+			ret.InvalidTag = strings.Split(r.InvalidTag, toJoinStr)
+		}
+
+		err = ret
 	}
 
 	return

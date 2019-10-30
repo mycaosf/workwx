@@ -83,27 +83,22 @@ func (p *Media) send(mediaType int, fileName string, temporary bool) (id string,
 
 	httpContentType := mediaHttpContentType + wpart.Boundary()
 
-	var resp *http.Response
+	var body []byte
 	r := bytes.NewReader(buf.Bytes())
 
 	header := make(http.Header)
 	header.Add(httpc.HTTPHeaderContentType, httpContentType)
 	header.Add(httpc.HTTPHeaderContentLength, strconv.Itoa(buf.Len()))
 
-	if resp, err = httpPost(url, header, r); err != nil {
+	if body, err = httpPostBytes(url, header, r); err != nil {
 		if url, err = p.buildUrl(mediaType, temporary, true); err == nil {
 			r.Seek(0, 0)
-			resp, err = httpPost(url, header, r)
+			body, err = httpPostBytes(url, header, r)
 		}
 	}
 
 	if err == nil {
-		defer resp.Body.Close()
-		var body []byte
-
-		if body, err = ioutil.ReadAll(resp.Body); err == nil {
-			id, err = mediaParseId(body, temporary)
-		}
+		id, err = mediaParseId(body, temporary)
 	}
 
 	return
