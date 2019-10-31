@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/mycaosf/utils/net/httpc"
-	"net/http"
 	"strings"
 )
 
@@ -127,27 +125,10 @@ func (p *Message) send(data interface{}) error {
 	if buf, err := json.Marshal(data); err != nil {
 		return err
 	} else {
-		var token string
-		if token, err = p.Get(false); err != nil {
-			return err
-		}
-
-		url := urlSendMessage + token
 		buffer := bytes.NewReader(buf)
-		header := make(http.Header)
-		header.Add(httpc.HTTPHeaderContentType, contentJson)
-
 		var r sendMessageResponseReal
-		if err = httpPostJson(url, header, buffer, &r); err != nil {
-			buffer.Seek(0, 0)
-			if token, err = p.Get(true); err != nil {
-				return err
-			}
-
-			url = urlSendMessage + token
-			if err = httpPostJson(url, header, buffer, &r); err != nil {
-				return err
-			}
+		if err = p.postJson(messageClass, messageApiSend, buffer, &r); err != nil {
+			return err
 		}
 
 		return sendMessageRet(&r)
@@ -187,7 +168,7 @@ var (
 )
 
 const (
-	urlSendMessage = "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token="
+	messageClass   = "message"
+	messageApiSend = "send"
 	toJoinStr      = "|"
-	contentJson    = "application/json"
 )
