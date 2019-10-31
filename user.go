@@ -1,7 +1,5 @@
 package workwx
 
-import ()
-
 type User struct {
 	token
 }
