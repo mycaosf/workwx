@@ -27,6 +27,14 @@ type accessTokenGetResponse struct {
 	Expire int    `json:"expires_in"`
 }
 
+type Error struct {
+	baseResponse
+}
+
+func (p *Error) Error() string {
+	return fmt.Sprintf("errcode: %d, errmsg: %s", p.ErrCode, p.ErrMsg)
+}
+
 //return token
 func (p *token) Get(force bool) (token string, err error) {
 	if p.corpId == "" {

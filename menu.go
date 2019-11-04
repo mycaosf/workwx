@@ -1,0 +1,58 @@
+package workwx
+
+import (
+	"bytes"
+	"strconv"
+)
+
+type Menu struct {
+	token
+	agentId int
+}
+
+func (p *Menu) SetAgentId(agentId int) {
+	p.agentId = agentId
+}
+
+func (p *Menu) Create(str string) error {
+	data := bytes.NewReader([]byte(str))
+	var e Error
+	if err := p.postJson(menuClass, menuApiCreate, data, &e, agentIdStr, strconv.Itoa(p.agentId)); err == nil {
+		return parseError(&e)
+	} else {
+		return err
+	}
+}
+
+func (p *Menu) Data() (string, error) {
+	if data, err := p.getBytes(menuClass, menuApiGet, nil, agentIdStr, strconv.Itoa(p.agentId)); err == nil {
+		return string(data), nil
+	} else {
+		return "", err
+	}
+}
+
+func (p *Menu) Delete() error {
+	var e Error
+	if err := p.getJson(menuClass, menuApiDelete, &e, agentIdStr, strconv.Itoa(p.agentId)); err == nil {
+		return parseError(&e)
+	} else {
+		return err
+	}
+}
+
+func parseError(e *Error) error {
+	if e.ErrCode == 0 {
+		return nil
+	} else {
+		return e
+	}
+}
+
+const (
+	menuClass     = "menu"
+	menuApiCreate = "create"
+	menuApiGet    = "get"
+	menuApiDelete = "delete"
+	agentIdStr    = "&agentid="
+)
