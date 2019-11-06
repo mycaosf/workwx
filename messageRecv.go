@@ -1,5 +1,7 @@
 package workwx
 
+import "encoding/xml"
+
 type MessageRUrl struct {
 	Signature string `url:"msg_signature"`
 	Timestamp string `url:"timestamp"`
@@ -54,16 +56,21 @@ type MessageR struct {
 	EventKey string `xml:"EventKey,omitempty"`
 }
 
+type CData struct {
+	Data string `xml:",cdata"`
+}
+
 type MessageRResponse struct {
-	ToUserName   string `xml:"ToUserName,cdata,omitempty"`
-	FromUserName string `xml:"FromUserName,cdata,omitempty"`
-	CreateTime   string `xml:"CreateTime"`
-	MsgType      string `xml:"MsgType,cdata"`
+	XMLName      xml.Name `xml:"xml"`
+	ToUserName   CData    `xml:"ToUserName,omitempty"`
+	FromUserName CData    `xml:"FromUserName,omitempty"`
+	CreateTime   string   `xml:"CreateTime"`
+	MsgType      CData    `xml:"MsgType"`
 }
 
 type MessageRResponseText struct {
 	MessageRResponse
-	Content string `xml:"Content,cdata"`
+	Content CData `xml:"Content"`
 }
 
 type MessageRResponseImage struct {
@@ -77,7 +84,7 @@ type MessageRResponseVoice struct {
 }
 
 type MessageRResponseMediaData struct {
-	MediaId string `xml:"MediaId,cdata"`
+	MediaId CData `xml:"MediaId"`
 }
 
 type MessageRResponseVideo struct {
@@ -87,8 +94,8 @@ type MessageRResponseVideo struct {
 
 type MessageRRepsonseVideoData struct {
 	MessageRResponseMediaData
-	Title       string `xml:"Title,cdata,omitempty"`
-	Description string `xml:"Description,cdata,omitempty"`
+	Title       CData `xml:"Title,omitempty"`
+	Description CData `xml:"Description,omitempty"`
 }
 
 type MessageRResponseNews struct {
@@ -98,14 +105,11 @@ type MessageRResponseNews struct {
 }
 
 type MessageRResponseNewsData struct {
-	Item MessageRResponseNewsDataItem `xml:"item"`
-}
-
-type MessageRResponseNewsDataItem struct {
-	Title       string `xml:"Title,cdata,omitempty"`
-	Description string `xml:"Description,cdata,omitempty"`
-	PicUrl      string `xml:"PicUrl,cdata,omitempty"`
-	Url         string `xml:"Url,cdata,omitempty"`
+	XMLName     xml.Name `xml:"item"`
+	Title       CData    `xml:"Title,omitempty"`
+	Description CData    `xml:"Description,omitempty"`
+	PicUrl      CData    `xml:"PicUrl,omitempty"`
+	Url         CData    `xml:"Url,omitempty"`
 }
 
 const (
