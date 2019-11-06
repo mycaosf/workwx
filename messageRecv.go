@@ -1,6 +1,12 @@
 package workwx
 
-import "encoding/xml"
+import (
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/xml"
+	"strconv"
+	"time"
+)
 
 type MessageRUrl struct {
 	Signature string `url:"msg_signature"`
@@ -110,6 +116,34 @@ type MessageRResponseNewsData struct {
 	Description CData    `xml:"Description,omitempty"`
 	PicUrl      CData    `xml:"PicUrl,omitempty"`
 	Url         CData    `xml:"Url,omitempty"`
+}
+
+type MessageResponseBody struct {
+	XMLName   xml.Name `xml:"xml"`
+	Encrypt   CData    `xml:"Encrypt"`
+	Signature CData    `xml:"MsgSignature"`
+	Nonce     CData    `xml:"Nonce"`
+	Timestamp string   `xml:"TimeStamp"`
+}
+
+func BuildMessageResponseBody(c *Crypto, v interface{}) (*MessageResponseBody, error) {
+	if data, err := xml.Marshal(v); err != nil {
+		return nil, err
+	} else {
+		var ret MessageResponseBody
+
+		nonce := make([]byte, 16)
+		rand.Read(nonce)
+		nonceStr := base64.StdEncoding.EncodeToString(nonce)
+		ret.Nonce.Data = nonceStr
+
+		message := c.Encrypt(data)
+		ret.Encrypt.Data = message
+		ret.Timestamp = strconv.FormatInt(time.Now().Unix(), 10)
+		ret.Signature.Data = c.Signature(ret.Timestamp, nonceStr, message)
+
+		return &ret, nil
+	}
 }
 
 const (
