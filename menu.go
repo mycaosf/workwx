@@ -18,7 +18,7 @@ func (p *Menu) Create(str string) error {
 	data := bytes.NewReader([]byte(str))
 	var e Error
 	if err := p.postJson(menuClass, menuApiCreate, data, &e, agentIdStr, strconv.Itoa(p.agentId)); err == nil {
-		return parseError(&e)
+		return e.parse()
 	} else {
 		return err
 	}
@@ -35,17 +35,9 @@ func (p *Menu) Data() (string, error) {
 func (p *Menu) Delete() error {
 	var e Error
 	if err := p.getJson(menuClass, menuApiDelete, &e, agentIdStr, strconv.Itoa(p.agentId)); err == nil {
-		return parseError(&e)
+		return e.parse()
 	} else {
 		return err
-	}
-}
-
-func parseError(e *Error) error {
-	if e.ErrCode == 0 {
-		return nil
-	} else {
-		return e
 	}
 }
 

@@ -40,6 +40,7 @@ type Message struct {
 	toUser  []string
 	toParty []string
 	toTag   []string
+	chatId  string
 	agentId int
 }
 
@@ -47,6 +48,7 @@ type sendMessageCommonReal struct {
 	ToUser  string `json:"touser,omitempty"`
 	ToParty string `json:"toparty,omitempty"`
 	ToTag   string `json:"totag,omitempty"`
+	ChatId  string `json:"chatid,omitempty"`
 	MsgType string `json:"msgtype"`
 	AgentId int    `json:"agentid"`
 }
@@ -77,7 +79,7 @@ type sendMessageMarkdownReal struct {
 	Markdown ContentText `json:"markdown"`
 }
 
-//receivers: user, party, tag
+//receivers: user, party, tag, chatid
 func (p *Message) SetReceiver(receivers ...[]string) {
 	for len(receivers) < 3 {
 		receivers = append(receivers, nil)
@@ -85,6 +87,9 @@ func (p *Message) SetReceiver(receivers ...[]string) {
 	p.toUser = receivers[0]
 	p.toParty = receivers[1]
 	p.toTag = receivers[2]
+	if len(receivers) > 3 && len(receivers[3]) == 1 {
+		p.chatId = receivers[3][0]
+	}
 }
 
 func (p *Message) SetAgentId(agentId int) {
@@ -117,6 +122,10 @@ func (p *Message) toRealCommon(to *sendMessageCommonReal, msgType string) {
 	if p.toTag != nil {
 		to.ToTag = strings.Join(p.toTag, toJoinStr)
 	}
+	if p.chatId != "" {
+		to.ChatId = p.chatId
+	}
+
 	to.MsgType = msgType
 	to.AgentId = p.agentId
 }

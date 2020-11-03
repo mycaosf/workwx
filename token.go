@@ -31,8 +31,16 @@ type Error struct {
 	baseResponse
 }
 
-func (p *Error) Error() string {
+func (p *baseResponse) Error() string {
 	return fmt.Sprintf("errcode: %d, errmsg: %s", p.ErrCode, p.ErrMsg)
+}
+
+func (p *baseResponse) parse() error {
+	if p.ErrCode == 0 {
+		return nil
+	} else {
+		return errors.New(p.Error())
+	}
 }
 
 //return token
