@@ -34,4 +34,6 @@ func (p *Department) List(id int) (ret DepartmentList, err error) {
 const (
 	departmentClass   = "department"
 	departmentApiList = "list"
+	departmentIdStr   = "&department_id="
+	fetchChildStr     = "&fetch_child="
 )
