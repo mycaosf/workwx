@@ -3,6 +3,7 @@ package workwx
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 )
 
 type Chat struct {
@@ -19,8 +20,12 @@ func (p *Chat) Create(name, owner string, userList []string) (chatId string, err
 
 	if err = p.send(chatApiCreate, data, &r); err == nil {
 		if err = r.parse(); err == nil {
-			chatId = r.ChatId
-			p.chatId = r.ChatId
+			if r.ChatId != "" {
+				chatId = r.ChatId
+				p.chatId = r.ChatId
+			} else {
+				err = fmt.Errorf("Create error: code: %d, msg: %s", r.ErrCode, r.ErrMsg)
+			}
 		}
 	}
 
