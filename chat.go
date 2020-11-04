@@ -18,8 +18,10 @@ func (p *Chat) Create(name, owner string, userList []string) (chatId string, err
 	}
 
 	if err = p.send(chatApiCreate, data, &r); err == nil {
-		chatId = r.ChatId
-		p.chatId = r.ChatId
+		if err = r.parse(); err == nil {
+			chatId = r.ChatId
+			p.chatId = r.ChatId
+		}
 	}
 
 	return
