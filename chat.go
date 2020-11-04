@@ -68,7 +68,7 @@ func (p *Chat) DelUsers(users []string) error {
 
 func (p *Chat) Get() (ret ChatInfo, err error) {
 	var r chatGetResponse
-	if err = p.getJson(chatClass, chatApiGet, &r); err == nil {
+	if err = p.getJson(chatClass, chatApiGet, &r, chatIdStr, p.chatId); err == nil {
 		if err = r.parse(); err == nil {
 			ret = r.Info
 		}
@@ -122,4 +122,5 @@ const (
 	chatApiCreate = "create"
 	chatApiModify = "update"
 	chatApiGet    = "get"
+	chatIdStr     = "&chatid="
 )
