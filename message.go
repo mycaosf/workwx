@@ -37,11 +37,12 @@ type sendMessageResponseReal struct {
 
 type Message struct {
 	token
-	toUser  []string
-	toParty []string
-	toTag   []string
-	chatId  string
-	agentId int
+	toUser    []string
+	toParty   []string
+	toTag     []string
+	chatId    string
+	agentId   int
+	className string
 }
 
 type sendMessageCommonReal struct {
@@ -50,7 +51,7 @@ type sendMessageCommonReal struct {
 	ToTag   string `json:"totag,omitempty"`
 	ChatId  string `json:"chatid,omitempty"`
 	MsgType string `json:"msgtype"`
-	AgentId int    `json:"agentid"`
+	AgentId int    `json:"agentid,omitempty"`
 }
 
 type MessageText struct {
@@ -84,12 +85,24 @@ func (p *Message) SetReceiver(receivers ...[]string) {
 	for len(receivers) < 3 {
 		receivers = append(receivers, nil)
 	}
-	p.toUser = receivers[0]
-	p.toParty = receivers[1]
-	p.toTag = receivers[2]
+
 	if len(receivers) > 3 && len(receivers[3]) == 1 {
-		p.chatId = receivers[3][0]
+		p.SetReceiverChatId(receivers[3][0])
+	} else {
+		p.toUser = receivers[0]
+		p.toParty = receivers[1]
+		p.toTag = receivers[2]
+		p.className = messageClass
+		p.chatId = ""
 	}
+}
+
+func (p *Message) SetReceiverChatId(chatId string) {
+	p.toUser = nil
+	p.toParty = nil
+	p.toTag = nil
+	p.chatId = chatId
+	p.className = chatClass
 }
 
 func (p *Message) SetAgentId(agentId int) {
@@ -136,7 +149,7 @@ func (p *Message) send(data interface{}) error {
 	} else {
 		buffer := bytes.NewReader(buf)
 		var r sendMessageResponseReal
-		if err = p.postJson(messageClass, messageApiSend, buffer, &r); err != nil {
+		if err = p.postJson(p.className, messageApiSend, buffer, &r); err != nil {
 			return err
 		}
 
