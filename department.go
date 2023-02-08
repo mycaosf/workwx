@@ -20,7 +20,7 @@ type Department struct {
 	token
 }
 
-//id < 0 if for all
+// id < 0 if for all
 func (p *Department) List(id int) (ret DepartmentList, err error) {
 	if id > 0 {
 		err = p.getJson(departmentClass, departmentApiList, &ret, "&id=", strconv.Itoa(id))

@@ -17,7 +17,7 @@ type token struct {
 }
 
 type baseResponse struct {
-	ErrCode int    `json:"errorcode"`
+	ErrCode int    `json:"errcode"`
 	ErrMsg  string `json:"errmsg"`
 }
 
@@ -39,11 +39,11 @@ func (p *baseResponse) parse() error {
 	if p.ErrCode == 0 {
 		return nil
 	} else {
-		return errors.New(p.Error())
+		return p
 	}
 }
 
-//return token
+// return token
 func (p *token) Get(force bool) (token string, err error) {
 	if p.corpId == "" {
 		err = errTokenNotInit
@@ -137,7 +137,7 @@ func (p *token) postJson(class, api string, data io.ReadSeeker, r interface{}, e
 	return
 }
 
-//set cropId and secret
+// set cropId and secret
 func (p *token) Set(corpId, secret string) {
 	p.corpId = corpId
 	p.secret = secret

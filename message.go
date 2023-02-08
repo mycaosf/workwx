@@ -80,7 +80,7 @@ type sendMessageMarkdownReal struct {
 	Markdown ContentText `json:"markdown"`
 }
 
-//receivers: user, party, tag, chatid
+// receivers: user, party, tag, chatid
 func (p *Message) SetReceiver(receivers ...[]string) {
 	for len(receivers) < 3 {
 		receivers = append(receivers, nil)
@@ -109,7 +109,7 @@ func (p *Message) SetAgentId(agentId int) {
 	p.agentId = agentId
 }
 
-//send text message
+// send text message
 func (p *Message) Text(text *MessageText) error {
 	var data sendMessageTextReal
 	p.toRealCommon(&data.sendMessageCommonReal, "text")
@@ -176,7 +176,7 @@ func sendMessageRet(r *sendMessageResponseReal) (err error) {
 	return
 }
 
-//send markdown message
+// send markdown message
 func (p *Message) Markdown(markdown *MessageMarkdown) error {
 	var data sendMessageMarkdownReal
 	p.toRealCommon(&data.sendMessageCommonReal, "markdown")

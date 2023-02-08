@@ -11,7 +11,7 @@ type Chat struct {
 	chatId string
 }
 
-//Create create chat. If you want to set chatid, you should call SetChatId before Create.
+// Create create chat. If you want to set chatid, you should call SetChatId before Create.
 func (p *Chat) Create(name, owner string, userList []string) (chatId string, err error) {
 	var r chatCreateResponse
 	data := &ChatInfo{

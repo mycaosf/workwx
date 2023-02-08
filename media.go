@@ -23,12 +23,12 @@ func (p *Media) File(fileName string) (string, error) {
 	return p.send(mediaContentTypeFile, fileName, true)
 }
 
-//only support AMR
+// only support AMR
 func (p *Media) Voice(fileName string) (string, error) {
 	return p.send(mediaContentTypeAmr, fileName, true)
 }
 
-//only support mp4
+// only support mp4
 func (p *Media) Video(fileName string) (string, error) {
 	return p.send(mediaContentTypeMp4, fileName, true)
 }
@@ -139,7 +139,7 @@ func (p *Media) buildUrl(mediaType int, temporary, force bool) (url string, err 
 	return
 }
 
-//fromTo[0]: from, fromTo[1]: to
+// fromTo[0]: from, fromTo[1]: to
 func (p *Media) GetData(id string, fromTo ...int) (data []byte, err error) {
 	var header http.Header
 	if len(fromTo) > 1 {
