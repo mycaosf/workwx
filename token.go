@@ -16,26 +16,22 @@ type token struct {
 	expire time.Time
 }
 
-type baseResponse struct {
+type Error struct {
 	ErrCode int    `json:"errcode"`
 	ErrMsg  string `json:"errmsg"`
 }
 
 type accessTokenGetResponse struct {
-	baseResponse
+	Error
 	Token  string `json:"access_token"`
 	Expire int    `json:"expires_in"`
 }
 
-type Error struct {
-	baseResponse
-}
-
-func (p *baseResponse) Error() string {
+func (p *Error) Error() string {
 	return fmt.Sprintf("errcode: %d, errmsg: %s", p.ErrCode, p.ErrMsg)
 }
 
-func (p *baseResponse) parse() error {
+func (p *Error) parse() error {
 	if p.ErrCode == 0 {
 		return nil
 	} else {

@@ -12,7 +12,7 @@ type DepartmentItem struct {
 }
 
 type DepartmentList struct {
-	baseResponse
+	Error
 	Items []DepartmentItem `json:"department"`
 }
 

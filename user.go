@@ -39,7 +39,7 @@ type UserId struct {
 
 func (p *User) Info(userId string) (info UserInfo, err error) {
 	type UserInfoResponse struct {
-		baseResponse
+		Error
 		UserInfo
 	}
 
@@ -53,7 +53,7 @@ func (p *User) Info(userId string) (info UserInfo, err error) {
 
 func (p *User) UserId(code string) (id UserId, err error) {
 	type UserIdResponse struct {
-		baseResponse
+		Error
 		UserId
 	}
 
@@ -67,7 +67,7 @@ func (p *User) UserId(code string) (id UserId, err error) {
 
 func (p *User) DepartmentUsers(departmentId int, fetchChild bool) (users []UserInfoBase, err error) {
 	type DepartmentUsersResponse struct {
-		baseResponse
+		Error
 		Users []UserInfoBase `json:"userlist"`
 	}
 
@@ -87,7 +87,7 @@ func (p *User) DepartmentUsers(departmentId int, fetchChild bool) (users []UserI
 
 func (p *User) DepartmentUsersDetail(departmentId int, fetchChild bool) (users []UserInfo, err error) {
 	type DepartmentUsersResponse struct {
-		baseResponse
+		Error
 		Users []UserInfo `json:"userlist"`
 	}
 

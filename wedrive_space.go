@@ -30,7 +30,7 @@ type WedriveSpaceID struct {
 }
 
 type WedriveSpaceCreateResponse struct {
-	baseResponse
+	Error
 	WedriveSpaceID
 }
 
@@ -44,7 +44,7 @@ type WedriveSpaceRenameRequest struct {
 type WedriveSpaceListRequest WedriveSpaceID
 
 type WedriveSpaceListResponse struct {
-	baseResponse
+	Error
 	SpaceInfo WedriveSpaceInfo `json:"space_info"`
 }
 

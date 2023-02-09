@@ -100,7 +100,7 @@ type ChatInfo struct {
 }
 
 type chatCreateResponse struct {
-	baseResponse
+	Error
 	ChatId string `json:"chatid"`
 }
 
@@ -113,7 +113,7 @@ type chatModifyParam struct {
 }
 
 type chatGetResponse struct {
-	baseResponse
+	Error
 	Info ChatInfo `json:"chat_info"`
 }
 

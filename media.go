@@ -105,12 +105,12 @@ func (p *Media) send(mediaType int, fileName string, temporary bool) (id string,
 
 func mediaParseId(data []byte, temporary bool) (id string, err error) {
 	type tempResponse struct {
-		baseResponse
+		Error
 		MediaId string `json:"media_id"`
 	}
 
 	type persResponse struct {
-		baseResponse
+		Error
 		Url string `json:"url"`
 	}
 

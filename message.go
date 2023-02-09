@@ -29,7 +29,7 @@ func (p *ErrorMessage) Error() string {
 }
 
 type sendMessageResponseReal struct {
-	baseResponse
+	Error
 	InvalidUser  string `json:"invaliduser"`
 	InvalidParty string `json:"invalidparty"`
 	InvalidTag   string `json:"invalidtag"`

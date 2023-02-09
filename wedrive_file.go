@@ -20,7 +20,7 @@ type WedriveFileListRequest struct {
 }
 
 type WedriveFileListResponse struct {
-	baseResponse
+	Error
 	More      bool            `json:"has_more"`
 	NextStart uint32          `json:"next_start"`
 	FileList  WedriveFileList `json:"file_list"`
@@ -50,7 +50,7 @@ type WedriveFileInfoRequest struct {
 }
 
 type WedriveFileInfoResponse struct {
-	baseResponse
+	Error
 	FileInfo WedriveFileItem `json:"file_info"`
 }
 
@@ -62,7 +62,7 @@ type WedriveFileCreateRequest struct {
 }
 
 type WedriveFileCreateResponse struct {
-	baseResponse
+	Error
 	FileID string `json:"fileid"`
 	Url    string `json:"url,omitempty"`
 }
@@ -84,7 +84,7 @@ type WedriveFileUploadRequest struct {
 }
 
 type WedriveFileUploadResponse struct {
-	baseResponse
+	Error
 	FileID string `json:"fileid"`
 }
 
@@ -107,7 +107,7 @@ type blockUploadInitRequest struct {
 }
 
 type blockUploadInitResponse struct {
-	baseResponse
+	Error
 	Hit    bool   `json:"hit_exist"`
 	Key    string `json:"upload_key"`
 	FileID string `json:"fileid"`
@@ -162,18 +162,18 @@ func (p *WedriveFile) BlockUpload(param *WedriveFileBlockUploadRequest) (ret Wed
 	if initRet, err = p.blockUploadInit(param); err != nil {
 		return
 	} else if initRet.Hit {
-		ret.baseResponse = initRet.baseResponse
+		ret.Error = initRet.Error
 		ret.FileID = initRet.FileID
 
 		return
 	}
 
-	var partRet baseResponse
+	var partRet Error
 	blocks := wedriveFileBlocks(param.Size)
 	if partRet, err = p.blockUploadPart(param.Data, initRet.Key, blocks); err != nil {
 		return
 	} else if partRet.ErrCode != 0 {
-		ret.baseResponse = partRet
+		ret.Error = partRet
 
 		return
 	}
@@ -257,7 +257,7 @@ func getHashState(h hash.Hash) (ret string) {
 	return
 }
 
-func (p *WedriveFile) blockUploadPart(r io.ReadSeeker, key string, blocks int) (ret baseResponse, err error) {
+func (p *WedriveFile) blockUploadPart(r io.ReadSeeker, key string, blocks int) (ret Error, err error) {
 	r.Seek(0, io.SeekStart)
 
 	type blockUploadPartRequest struct {
@@ -300,7 +300,7 @@ func (p *WedriveFile) blockUploadFinish(key string) (ret WedriveFileUploadRespon
 
 func (p *WedriveFile) Download(param *WedriveFileDownloadRequest, to io.Writer) (ret Error, err error) {
 	type fileDownloadResponse struct {
-		baseResponse
+		Error
 		Url         string `json:"download_url"`
 		CookieName  string `json:"cookie_name"`
 		CookieValue string `json:"cookie_value"`
@@ -308,7 +308,7 @@ func (p *WedriveFile) Download(param *WedriveFileDownloadRequest, to io.Writer) 
 
 	var r fileDownloadResponse
 	err = wedrivePost(&p.token, wedriveApiFileDownload, param, &r)
-	ret.baseResponse = r.baseResponse
+	ret = r.Error
 	if err == nil && r.ErrCode == 0 {
 		var req *http.Request
 
