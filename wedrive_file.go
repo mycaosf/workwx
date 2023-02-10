@@ -78,6 +78,17 @@ type WedriveFileRenameRequest struct {
 	NewName string `json:"new_name"`
 }
 
+type WedriveFileMoveRequest struct {
+	FatherID string   `json:"fatherid"` // 当前目录的fileid,根目录时为空间spaceid
+	Replace  bool     `json:"replace"`
+	FileID   []string `json:"fileid"`
+}
+
+type WedriveFileMoveResponse struct {
+	Error
+	FileList WedriveFileList `json:"file_list"`
+}
+
 type WedriveFileUploadRequest struct {
 	SpaceID    string `json:"spaceid"`
 	FatherID   string `json:"fatherid"` // 当前目录的fileid,根目录时为空间spaceid
@@ -154,6 +165,12 @@ func (p *WedriveFile) Delete(param *WedriveFileDeleteRequest) (ret Error, err er
 
 func (p *WedriveFile) Rename(param *WedriveFileRenameRequest) (ret Error, err error) {
 	err = wedrivePost(&p.token, wedriveApiFileRename, param, &ret)
+
+	return
+}
+
+func (p *WedriveFile) Move(param *WedriveFileMoveRequest) (ret WedriveFileMoveResponse, err error) {
+	err = wedrivePost(&p.token, wedriveApiFileMove, param, &ret)
 
 	return
 }
@@ -397,6 +414,7 @@ const (
 	wedriveApiFileCreate            = "file_create"
 	wedriveApiFileDelete            = "file_delete"
 	wedriveApiFileRename            = "file_rename"
+	wedriveApiFileMove              = "file_move"
 	wedriveApiFileUpload            = "file_upload"
 	wedriveApiFileBlockUploadInit   = "file_upload_init"
 	wedriveApiFileBlockUploadPart   = "file_upload_part"
