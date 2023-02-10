@@ -9,6 +9,8 @@ import (
 	"hash"
 	"io"
 	"net/http"
+	"sync"
+	"sync/atomic"
 )
 
 type WedriveFileListRequest struct {
@@ -95,6 +97,7 @@ type WedriveFileBlockUploadRequest struct {
 	Size         uint64 `json:"size"` //max 20G
 	SkipPushCard bool   `json:"skip_push_card"`
 	Data         io.ReadSeeker
+	Concurrent   int
 }
 
 type blockUploadInitRequest struct {
@@ -111,6 +114,12 @@ type blockUploadInitResponse struct {
 	Hit    bool   `json:"hit_exist"`
 	Key    string `json:"upload_key"`
 	FileID string `json:"fileid"`
+}
+
+type blockUploadPartRequest struct {
+	Key   string `json:"upload_key"`
+	Index int32  `json:"index"`
+	Data  string `json:"file_base64_content"`
 }
 
 type WedriveFileDownloadRequest WedriveFileInfoRequest
@@ -170,7 +179,7 @@ func (p *WedriveFile) BlockUpload(param *WedriveFileBlockUploadRequest) (ret Wed
 
 	var partRet Error
 	blocks := wedriveFileBlocks(param.Size)
-	if partRet, err = p.blockUploadPart(param.Data, initRet.Key, blocks); err != nil {
+	if partRet, err = p.blockUploadPart(param.Data, initRet.Key, blocks, param.Concurrent); err != nil {
 		return
 	} else if partRet.ErrCode != 0 {
 		ret.Error = partRet
@@ -257,15 +266,25 @@ func getHashState(h hash.Hash) (ret string) {
 	return
 }
 
-func (p *WedriveFile) blockUploadPart(r io.ReadSeeker, key string, blocks int) (ret Error, err error) {
+func (p *WedriveFile) blockUploadPart(r io.ReadSeeker, key string, blocks, concurrent int) (ret Error, err error) {
 	r.Seek(0, io.SeekStart)
 
-	type blockUploadPartRequest struct {
-		Key   string `json:"upload_key"`
-		Index int32  `json:"index"`
-		Data  string `json:"file_base64_content"`
+	if concurrent < 1 {
+		concurrent = 1
+	} else if concurrent > blocks {
+		concurrent = blocks
 	}
 
+	if concurrent == 1 {
+		ret, err = p.blockUploadPartSequent(r, key, blocks)
+	} else {
+		ret, err = p.blockUploadPartConcurrent(r, key, blocks, concurrent)
+	}
+
+	return
+}
+
+func (p *WedriveFile) blockUploadPartSequent(r io.ReadSeeker, key string, blocks int) (ret Error, err error) {
 	data := make([]byte, wedriveBlockSize)
 
 	for i := 1; i <= blocks; i++ {
@@ -280,6 +299,50 @@ func (p *WedriveFile) blockUploadPart(r io.ReadSeeker, key string, blocks int) (
 			break
 		}
 	}
+
+	return
+}
+
+func (p *WedriveFile) blockUploadPartConcurrent(r io.ReadSeeker, key string, blocks, concurrent int) (ret Error, err error) {
+	var mtx sync.Mutex
+	var wg sync.WaitGroup
+	current := 0
+	errCount := int32(0)
+
+	for i := 0; i < concurrent; i++ {
+		wg.Add(1)
+		go func() {
+			data := make([]byte, wedriveBlockSize)
+
+			for current < blocks && errCount == 0 {
+				var index int32
+
+				mtx.Lock()
+				n, _ := r.Read(data)
+				current++
+				index = int32(current)
+				mtx.Unlock()
+
+				request := &blockUploadPartRequest{
+					Key:   key,
+					Index: index,
+					Data:  base64.StdEncoding.EncodeToString(data[:n]),
+				}
+
+				var res Error
+				if e := wedrivePost(&p.token, wedriveApiFileBlockUploadPart, &request, &res); e != nil || res.ErrCode != 0 {
+					if atomic.AddInt32(&errCount, 1) == 1 {
+						err = e
+						ret = res
+					}
+					break
+				}
+			}
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
 
 	return
 }
