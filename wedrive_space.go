@@ -14,7 +14,7 @@ type WedriveAutoList struct {
 
 type WedriveSpaceInfo struct {
 	SpaceID      string          `json:"spaceid"`
-	SpaceName    string          `json:"spacename"`
+	SpaceName    string          `json:"space_name"`
 	AuthList     WedriveAutoList `json:"auth_list"`
 	SpaceSubType uint32          `json:"space_sub_type"`
 }
