@@ -1,10 +1,10 @@
 package workwx
 
 type WedriveAuthInfoItem struct {
-	Type         uint32 `json:"type"` // 1: person, 2: department
-	UserID       string `json:"userid,omitempty"`
-	DepartmentID uint32 `json:"departmentid,omitempty"`
-	Auth         int    `json:"auth"` // 1: only download, 4: may preview, 7: administrator
+	Type         uint32  `json:"type"` // 1: person, 2: department
+	UserID       *string `json:"userid,omitempty"`
+	DepartmentID *uint32 `json:"departmentid,omitempty"`
+	Auth         int     `json:"auth"` // 1: only download, 4: may preview, 7: administrator
 }
 
 type WedriveAutoList struct {

@@ -42,9 +42,9 @@ type WedriveFileItem struct {
 	MTime      uint64 `json:"mtime"`
 	FileType   uint32 `json:"file_type"`   // 1:文件夹 2:文件 3:微文档(文档) 4:微文档(表格) 5:微文档(收集表)
 	FileStatus uint32 `json:"file_status"` // 文件状态, 1:正常 2:删除
-	Sha        string `json:"sha,omitempty"`
-	Md5        string `json:"md5,omitempty"`
-	Url        string `json:"url,omitempty"`
+	Sha        string `json:"sha"`
+	Md5        string `json:"md5"`
+	Url        string `json:"url"`
 }
 
 type WedriveFileInfoRequest struct {
@@ -66,7 +66,7 @@ type WedriveFileCreateRequest struct {
 type WedriveFileCreateResponse struct {
 	Error
 	FileID string `json:"fileid"`
-	Url    string `json:"url,omitempty"`
+	Url    string `json:"url"`
 }
 
 type WedriveFileDeleteRequest struct {
