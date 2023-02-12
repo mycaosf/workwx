@@ -74,38 +74,38 @@ type WedriveFileSecureSetPermissionRequest struct {
 	Watermark WedriveFileSecureWatermarkSetting `json:"watermark"`
 }
 
-func (p *WedriveFile) SecureAdd(param *WedriveFileSecureAddRequest) (ret Error, err error) {
-	err = wedrivePost(&p.token, wedriveApiFileSecureAdd, param, &ret)
+func (p *WedriveFile) SecureAdd(param *WedriveFileSecureAddRequest) (ret Error) {
+	wedrivePost(&p.Token, wedriveApiFileSecureAdd, param, &ret)
 
 	return
 }
 
-func (p *WedriveFile) SecureDel(param *WedriveFileSecureDelRequest) (ret Error, err error) {
-	err = wedrivePost(&p.token, wedriveApiFileSecureDel, param, &ret)
+func (p *WedriveFile) SecureDel(param *WedriveFileSecureDelRequest) (ret Error) {
+	wedrivePost(&p.Token, wedriveApiFileSecureDel, param, &ret)
 
 	return
 }
 
-func (p *WedriveFile) SecureSet(param *WedriveFileSecureSetRequest) (ret Error, err error) {
-	err = wedrivePost(&p.token, wedriveApiFileSecureSet, param, &ret)
+func (p *WedriveFile) SecureSet(param *WedriveFileSecureSetRequest) (ret Error) {
+	wedrivePost(&p.Token, wedriveApiFileSecureSet, param, &ret)
 
 	return
 }
 
-func (p *WedriveFile) SecureShare(param *WedriveFileSecureShareRequest) (ret WedriveFileSecureShareResponse, err error) {
-	err = wedrivePost(&p.token, wedriveApiFileSecureShare, param, &ret)
+func (p *WedriveFile) SecureShare(param *WedriveFileSecureShareRequest) (ret WedriveFileSecureShareResponse) {
+	wedrivePost(&p.Token, wedriveApiFileSecureShare, param, &ret)
 
 	return
 }
 
-func (p *WedriveFile) SecurePermission(param *WedriveFileSecurePermissionRequest) (ret WedriveFileSecurePermissionResponse, err error) {
-	err = wedrivePost(&p.token, wedriveApiFileSecurePermission, param, &ret)
+func (p *WedriveFile) SecurePermission(param *WedriveFileSecurePermissionRequest) (ret WedriveFileSecurePermissionResponse) {
+	wedrivePost(&p.Token, wedriveApiFileSecurePermission, param, &ret)
 
 	return
 }
 
-func (p *WedriveFile) SecureSetPermission(param *WedriveFileSecureSetPermissionRequest) (ret Error, err error) {
-	err = wedrivePost(&p.token, wedriveApiFileSecureSetPermission, param, &ret)
+func (p *WedriveFile) SecureSetPermission(param *WedriveFileSecureSetPermissionRequest) (ret Error) {
+	wedrivePost(&p.Token, wedriveApiFileSecureSetPermission, param, &ret)
 
 	return
 }

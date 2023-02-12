@@ -1,6 +1,8 @@
 package workwx
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/mycaosf/utils/net/httpc"
@@ -9,16 +11,11 @@ import (
 	"time"
 )
 
-type token struct {
+type Token struct {
 	corpId string
 	secret string
 	token  string
 	expire time.Time
-}
-
-type Error struct {
-	ErrCode int    `json:"errcode"`
-	ErrMsg  string `json:"errmsg"`
 }
 
 type accessTokenGetResponse struct {
@@ -27,20 +24,8 @@ type accessTokenGetResponse struct {
 	Expire int    `json:"expires_in"`
 }
 
-func (p *Error) Error() string {
-	return fmt.Sprintf("errcode: %d, errmsg: %s", p.ErrCode, p.ErrMsg)
-}
-
-func (p *Error) parse() error {
-	if p.ErrCode == 0 {
-		return nil
-	} else {
-		return p
-	}
-}
-
-// return token
-func (p *token) Get(force bool) (token string, err error) {
+// return token string
+func (p *Token) Get(force bool) (token string, err error) {
 	if p.corpId == "" {
 		err = errTokenNotInit
 
@@ -59,10 +44,11 @@ func (p *token) Get(force bool) (token string, err error) {
 	}
 
 	token = p.token
+
 	return
 }
 
-func (p *token) get() error {
+func (p *Token) get() error {
 	var ret accessTokenGetResponse
 	p.token = ""
 	url := urlBase + "gettoken?corpid=" + p.corpId + "&corpsecret=" + p.secret
@@ -76,7 +62,7 @@ func (p *token) get() error {
 	return err
 }
 
-func (p *token) urlToken(class, api string, force bool, exts ...string) (url string, err error) {
+func (p *Token) urlToken(class, api string, force bool, exts ...string) (url string, err error) {
 	var token string
 	if token, err = p.Get(force); err == nil {
 		url = urlBase + fmt.Sprintf("%s/%s?access_token=%s", class, api, token)
@@ -90,12 +76,20 @@ func (p *token) urlToken(class, api string, force bool, exts ...string) (url str
 	return
 }
 
-func (p *token) getJson(class, api string, v interface{}, exts ...string) (err error) {
+func (p *Token) getJson(class, api string, res any, exts ...string) {
+	if err := p.GetJson(class, api, res, exts...); err != nil {
+		if e, ok := res.(IError); ok {
+			e.SetError(err)
+		}
+	}
+}
+
+func (p *Token) GetJson(class, api string, res any, exts ...string) (err error) {
 	var url string
 	if url, err = p.urlToken(class, api, false, exts...); err == nil {
-		if err = httpGetJson(url, nil, v); err != nil {
+		if err = httpGetJson(url, nil, res); err != nil {
 			if url, err = p.urlToken(class, api, true, exts...); err == nil {
-				err = httpGetJson(url, nil, v)
+				err = httpGetJson(url, nil, res)
 			}
 		}
 	}
@@ -103,7 +97,7 @@ func (p *token) getJson(class, api string, v interface{}, exts ...string) (err e
 	return
 }
 
-func (p *token) getBytes(class, api string, header http.Header, exts ...string) (data []byte, err error) {
+func (p *Token) GetBytes(class, api string, header http.Header, exts ...string) (data []byte, err error) {
 	var url string
 	if url, err = p.urlToken(class, api, false, exts...); err == nil {
 		if data, err = httpGetBytes(url, header); err != nil {
@@ -116,7 +110,21 @@ func (p *token) getBytes(class, api string, header http.Header, exts ...string) 
 	return
 }
 
-func (p *token) postJson(class, api string, data io.ReadSeeker, r interface{}, exts ...string) (err error) {
+func (p *Token) postJson(class, api string, req, res any, exts ...string) {
+	data, err := json.Marshal(req)
+	if err == nil {
+		buffer := bytes.NewReader(data)
+		err = p.PostJson(wedriveClass, api, buffer, res)
+	}
+
+	if err != nil {
+		if e, ok := res.(IError); ok {
+			e.SetError(err)
+		}
+	}
+}
+
+func (p *Token) PostJson(class, api string, data io.ReadSeeker, r any, exts ...string) (err error) {
 	var url string
 	if url, err = p.urlToken(class, api, false, exts...); err == nil {
 		header := make(http.Header)
@@ -134,7 +142,7 @@ func (p *token) postJson(class, api string, data io.ReadSeeker, r interface{}, e
 }
 
 // set cropId and secret
-func (p *token) Set(corpId, secret string) {
+func (p *Token) Set(corpId, secret string) {
 	p.corpId = corpId
 	p.secret = secret
 	p.token = ""

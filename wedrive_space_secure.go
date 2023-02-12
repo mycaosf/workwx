@@ -63,32 +63,32 @@ type WedriveSpaceSecureSetting struct {
 	CreateFileOnlyAdmin               bool   `json:"create_file_only_admin"`
 }
 
-func (p *WedriveSpace) SecureAdd(param *WedriveSpaceSecureAddRequest) (ret Error, err error) {
-	err = wedrivePost(&p.token, wedriveApiSpaceSecureAdd, param, &ret)
+func (p *WedriveSpace) SecureAdd(param *WedriveSpaceSecureAddRequest) (ret Error) {
+	wedrivePost(&p.Token, wedriveApiSpaceSecureAdd, param, &ret)
 
 	return
 }
 
-func (p *WedriveSpace) SecureDel(param *WedriveSpaceSecureDelRequest) (ret Error, err error) {
-	err = wedrivePost(&p.token, wedriveApiSpaceSecureDel, param, &ret)
+func (p *WedriveSpace) SecureDel(param *WedriveSpaceSecureDelRequest) (ret Error) {
+	wedrivePost(&p.Token, wedriveApiSpaceSecureDel, param, &ret)
 
 	return
 }
 
-func (p *WedriveSpace) SecureSet(param *WedriveSpaceSecureSetRequest) (ret Error, err error) {
-	err = wedrivePost(&p.token, wedriveApiSpaceSecureSet, param, &ret)
+func (p *WedriveSpace) SecureSet(param *WedriveSpaceSecureSetRequest) (ret Error) {
+	wedrivePost(&p.Token, wedriveApiSpaceSecureSet, param, &ret)
 
 	return
 }
 
-func (p *WedriveSpace) SecureShare(param *WedriveSpaceSecureShareRequest) (ret WedriveSpaceSecureShareResponse, err error) {
-	err = wedrivePost(&p.token, wedriveApiSpaceSecureShare, param, &ret)
+func (p *WedriveSpace) SecureShare(param *WedriveSpaceSecureShareRequest) (ret WedriveSpaceSecureShareResponse) {
+	wedrivePost(&p.Token, wedriveApiSpaceSecureShare, param, &ret)
 
 	return
 }
 
-func (p *WedriveSpace) SecureInfo(param *WedriveSpaceSecureInfoRequest) (ret WedriveSpaceSecureInfoResponse, err error) {
-	err = wedrivePost(&p.token, wedriveApiSpaceSecureInfo, param, &ret)
+func (p *WedriveSpace) SecureInfo(param *WedriveSpaceSecureInfoRequest) (ret WedriveSpaceSecureInfoResponse) {
+	wedrivePost(&p.Token, wedriveApiSpaceSecureInfo, param, &ret)
 
 	return
 }

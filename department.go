@@ -4,6 +4,10 @@ import (
 	"strconv"
 )
 
+type Department struct {
+	Token
+}
+
 type DepartmentItem struct {
 	Id       int    `json:"id"`
 	Name     string `json:"name"`
@@ -11,21 +15,17 @@ type DepartmentItem struct {
 	Order    int    `json:"order"`
 }
 
-type DepartmentList struct {
+type DepartmentListResponse struct {
 	Error
 	Items []DepartmentItem `json:"department"`
 }
 
-type Department struct {
-	token
-}
-
 // id < 0 if for all
-func (p *Department) List(id int) (ret DepartmentList, err error) {
+func (p *Department) List(id int) (ret DepartmentListResponse) {
 	if id > 0 {
-		err = p.getJson(departmentClass, departmentApiList, &ret, "&id=", strconv.Itoa(id))
+		p.getJson(departmentClass, departmentApiList, &ret, "&id=", strconv.Itoa(id))
 	} else {
-		err = p.getJson(departmentClass, departmentApiList, &ret)
+		p.getJson(departmentClass, departmentApiList, &ret)
 	}
 
 	return

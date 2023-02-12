@@ -1,5 +1,9 @@
 package workwx
 
+type WedriveSpace struct {
+	Token
+}
+
 type WedriveAuthInfoItem struct {
 	Type         uint32  `json:"type"` // 1: person, 2: department
 	UserID       *string `json:"userid,omitempty"`
@@ -48,30 +52,26 @@ type WedriveSpaceListResponse struct {
 	SpaceInfo WedriveSpaceInfo `json:"space_info"`
 }
 
-type WedriveSpace struct {
-	token
-}
-
-func (p *WedriveSpace) Create(param *WedriveSpaceCreateRequest) (ret WedriveSpaceCreateResponse, err error) {
-	err = wedrivePost(&p.token, wedriveApiSpaceCreate, param, &ret)
+func (p *WedriveSpace) Create(param *WedriveSpaceCreateRequest) (ret WedriveSpaceCreateResponse) {
+	wedrivePost(&p.Token, wedriveApiSpaceCreate, param, &ret)
 
 	return
 }
 
-func (p *WedriveSpace) Delete(param *WedriveSpaceDeleteRequest) (ret Error, err error) {
-	err = wedrivePost(&p.token, wedriveApiSpaceDelete, param, &ret)
+func (p *WedriveSpace) Delete(param *WedriveSpaceDeleteRequest) (ret Error) {
+	wedrivePost(&p.Token, wedriveApiSpaceDelete, param, &ret)
 
 	return
 }
 
-func (p *WedriveSpace) Rename(param *WedriveSpaceRenameRequest) (ret Error, err error) {
-	err = wedrivePost(&p.token, wedriveApiSpaceRename, param, &ret)
+func (p *WedriveSpace) Rename(param *WedriveSpaceRenameRequest) (ret Error) {
+	wedrivePost(&p.Token, wedriveApiSpaceRename, param, &ret)
 
 	return
 }
 
-func (p *WedriveSpace) List(param *WedriveSpaceListRequest) (ret WedriveSpaceListResponse, err error) {
-	err = wedrivePost(&p.token, wedriveApiSpaceInfo, param, &ret)
+func (p *WedriveSpace) List(param *WedriveSpaceListRequest) (ret WedriveSpaceListResponse) {
+	wedrivePost(&p.Token, wedriveApiSpaceInfo, param, &ret)
 
 	return
 }

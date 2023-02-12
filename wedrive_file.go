@@ -13,6 +13,10 @@ import (
 	"sync/atomic"
 )
 
+type WedriveFile struct {
+	Token
+}
+
 type WedriveFileListRequest struct {
 	SpaceID  string `json:"spaceid"`
 	FatherID string `json:"fatherid"`  // 当前目录的fileid,根目录时为空间spaceid
@@ -135,83 +139,75 @@ type blockUploadPartRequest struct {
 
 type WedriveFileDownloadRequest WedriveFileInfoRequest
 
-type WedriveFile struct {
-	token
-}
-
-func (p *WedriveFile) List(param *WedriveFileListRequest) (ret WedriveFileListResponse, err error) {
-	err = wedrivePost(&p.token, wedriveApiFileList, param, &ret)
+func (p *WedriveFile) List(param *WedriveFileListRequest) (ret WedriveFileListResponse) {
+	wedrivePost(&p.Token, wedriveApiFileList, param, &ret)
 
 	return
 }
 
-func (p *WedriveFile) Info(param *WedriveFileInfoRequest) (ret WedriveFileInfoResponse, err error) {
-	err = wedrivePost(&p.token, wedriveApiFileInfo, param, &ret)
+func (p *WedriveFile) Info(param *WedriveFileInfoRequest) (ret WedriveFileInfoResponse) {
+	wedrivePost(&p.Token, wedriveApiFileInfo, param, &ret)
 
 	return
 }
 
-func (p *WedriveFile) Create(param *WedriveFileCreateRequest) (ret WedriveFileCreateResponse, err error) {
-	err = wedrivePost(&p.token, wedriveApiFileCreate, param, &ret)
+func (p *WedriveFile) Create(param *WedriveFileCreateRequest) (ret WedriveFileCreateResponse) {
+	wedrivePost(&p.Token, wedriveApiFileCreate, param, &ret)
 
 	return
 }
 
-func (p *WedriveFile) Delete(param *WedriveFileDeleteRequest) (ret Error, err error) {
-	err = wedrivePost(&p.token, wedriveApiFileDelete, param, &ret)
+func (p *WedriveFile) Delete(param *WedriveFileDeleteRequest) (ret Error) {
+	wedrivePost(&p.Token, wedriveApiFileDelete, param, &ret)
 
 	return
 }
 
-func (p *WedriveFile) Rename(param *WedriveFileRenameRequest) (ret Error, err error) {
-	err = wedrivePost(&p.token, wedriveApiFileRename, param, &ret)
+func (p *WedriveFile) Rename(param *WedriveFileRenameRequest) (ret Error) {
+	wedrivePost(&p.Token, wedriveApiFileRename, param, &ret)
 
 	return
 }
 
-func (p *WedriveFile) Move(param *WedriveFileMoveRequest) (ret WedriveFileMoveResponse, err error) {
-	err = wedrivePost(&p.token, wedriveApiFileMove, param, &ret)
+func (p *WedriveFile) Move(param *WedriveFileMoveRequest) (ret WedriveFileMoveResponse) {
+	wedrivePost(&p.Token, wedriveApiFileMove, param, &ret)
 
 	return
 }
 
 // Small files upload. FileSize <= 10M.
-func (p *WedriveFile) Upload(param *WedriveFileUploadRequest) (ret WedriveFileUploadResponse, err error) {
-	err = wedrivePost(&p.token, wedriveApiFileUpload, param, &ret)
+func (p *WedriveFile) Upload(param *WedriveFileUploadRequest) (ret WedriveFileUploadResponse) {
+	wedrivePost(&p.Token, wedriveApiFileUpload, param, &ret)
 
 	return
 }
 
 // Big files upload.
-func (p *WedriveFile) BlockUpload(param *WedriveFileBlockUploadRequest) (ret WedriveFileUploadResponse, err error) {
-	var initRet blockUploadInitResponse
-	if initRet, err = p.blockUploadInit(param); err != nil {
-		return
-	} else if initRet.Hit {
-		ret.Error = initRet.Error
+func (p *WedriveFile) BlockUpload(param *WedriveFileBlockUploadRequest) (ret WedriveFileUploadResponse) {
+	initRet := p.blockUploadInit(param)
+	ret.Error = initRet.Error
+	if initRet.GetError() != nil || initRet.Hit {
 		ret.FileID = initRet.FileID
 
 		return
 	}
 
-	var partRet Error
 	blocks := wedriveFileBlocks(param.Size)
-	if partRet, err = p.blockUploadPart(param.Data, initRet.Key, blocks, param.Concurrent); err != nil {
-		return
-	} else if partRet.ErrCode != 0 {
+	if partRet := p.blockUploadPart(param.Data, initRet.Key, blocks, param.Concurrent); partRet.GetError() != nil {
 		ret.Error = partRet
-
 		return
 	}
 
-	return p.blockUploadFinish(initRet.Key)
+	ret = p.blockUploadFinish(initRet.Key)
+
+	return
 }
 
 func wedriveFileBlocks(size uint64) int {
 	return int((size-1)/uint64(wedriveBlockSize)) + 1
 }
 
-func (p *WedriveFile) blockUploadInit(param *WedriveFileBlockUploadRequest) (ret blockUploadInitResponse, err error) {
+func (p *WedriveFile) blockUploadInit(param *WedriveFileBlockUploadRequest) (ret blockUploadInitResponse) {
 	blocks := wedriveFileBlocks(param.Size)
 	sha := make([]string, blocks)
 
@@ -229,6 +225,7 @@ func (p *WedriveFile) blockUploadInit(param *WedriveFileBlockUploadRequest) (ret
 	r := param.Data
 	r.Seek(0, io.SeekStart)
 	h := sha1.New()
+	var err error
 
 	for i := 0; i < blocks; i++ {
 		var n int
@@ -250,10 +247,10 @@ func (p *WedriveFile) blockUploadInit(param *WedriveFileBlockUploadRequest) (ret
 	}
 
 	if err != nil {
-		return
+		ret.SetError(err)
+	} else {
+		wedrivePost(&p.Token, wedriveApiFileBlockUploadInit, &req, &ret)
 	}
-
-	err = wedrivePost(&p.token, wedriveApiFileBlockUploadInit, &req, &ret)
 
 	return
 }
@@ -283,7 +280,7 @@ func getHashState(h hash.Hash) (ret string) {
 	return
 }
 
-func (p *WedriveFile) blockUploadPart(r io.ReadSeeker, key string, blocks, concurrent int) (ret Error, err error) {
+func (p *WedriveFile) blockUploadPart(r io.ReadSeeker, key string, blocks, concurrent int) (ret Error) {
 	r.Seek(0, io.SeekStart)
 
 	if concurrent < 1 {
@@ -293,15 +290,15 @@ func (p *WedriveFile) blockUploadPart(r io.ReadSeeker, key string, blocks, concu
 	}
 
 	if concurrent == 1 {
-		ret, err = p.blockUploadPartSequent(r, key, blocks)
+		ret = p.blockUploadPartSequent(r, key, blocks)
 	} else {
-		ret, err = p.blockUploadPartConcurrent(r, key, blocks, concurrent)
+		ret = p.blockUploadPartConcurrent(r, key, blocks, concurrent)
 	}
 
 	return
 }
 
-func (p *WedriveFile) blockUploadPartSequent(r io.ReadSeeker, key string, blocks int) (ret Error, err error) {
+func (p *WedriveFile) blockUploadPartSequent(r io.ReadSeeker, key string, blocks int) (ret Error) {
 	data := make([]byte, wedriveBlockSize)
 
 	for i := 1; i <= blocks; i++ {
@@ -312,7 +309,8 @@ func (p *WedriveFile) blockUploadPartSequent(r io.ReadSeeker, key string, blocks
 			Data:  base64.StdEncoding.EncodeToString(data[:n]),
 		}
 
-		if err = wedrivePost(&p.token, wedriveApiFileBlockUploadPart, &request, &ret); err != nil || ret.ErrCode != 0 {
+		wedrivePost(&p.Token, wedriveApiFileBlockUploadPart, &request, &ret)
+		if ret.GetError() != nil {
 			break
 		}
 	}
@@ -320,7 +318,7 @@ func (p *WedriveFile) blockUploadPartSequent(r io.ReadSeeker, key string, blocks
 	return
 }
 
-func (p *WedriveFile) blockUploadPartConcurrent(r io.ReadSeeker, key string, blocks, concurrent int) (ret Error, err error) {
+func (p *WedriveFile) blockUploadPartConcurrent(r io.ReadSeeker, key string, blocks, concurrent int) (ret Error) {
 	var mtx sync.Mutex
 	var wg sync.WaitGroup
 	current := 0
@@ -347,9 +345,9 @@ func (p *WedriveFile) blockUploadPartConcurrent(r io.ReadSeeker, key string, blo
 				}
 
 				var res Error
-				if e := wedrivePost(&p.token, wedriveApiFileBlockUploadPart, &request, &res); e != nil || res.ErrCode != 0 {
+				wedrivePost(&p.Token, wedriveApiFileBlockUploadPart, &request, &res)
+				if res.GetError() != nil {
 					if atomic.AddInt32(&errCount, 1) == 1 {
-						err = e
 						ret = res
 					}
 					break
@@ -364,7 +362,7 @@ func (p *WedriveFile) blockUploadPartConcurrent(r io.ReadSeeker, key string, blo
 	return
 }
 
-func (p *WedriveFile) blockUploadFinish(key string) (ret WedriveFileUploadResponse, err error) {
+func (p *WedriveFile) blockUploadFinish(key string) (ret WedriveFileUploadResponse) {
 	type blockUploadFinishRequest struct {
 		Key string `json:"upload_key"`
 	}
@@ -373,12 +371,12 @@ func (p *WedriveFile) blockUploadFinish(key string) (ret WedriveFileUploadRespon
 		Key: key,
 	}
 
-	err = wedrivePost(&p.token, wedriveApiFileBlockUploadFinish, &req, &ret)
+	wedrivePost(&p.Token, wedriveApiFileBlockUploadFinish, &req, &ret)
 
 	return
 }
 
-func (p *WedriveFile) Download(param *WedriveFileDownloadRequest, to io.Writer) (ret Error, err error) {
+func (p *WedriveFile) Download(param *WedriveFileDownloadRequest, to io.Writer) (ret Error) {
 	type fileDownloadResponse struct {
 		Error
 		Url         string `json:"download_url"`
@@ -387,12 +385,13 @@ func (p *WedriveFile) Download(param *WedriveFileDownloadRequest, to io.Writer) 
 	}
 
 	var r fileDownloadResponse
-	err = wedrivePost(&p.token, wedriveApiFileDownload, param, &r)
+	wedrivePost(&p.Token, wedriveApiFileDownload, param, &r)
 	ret = r.Error
-	if err == nil && r.ErrCode == 0 {
-		var req *http.Request
 
-		if req, err = http.NewRequest("GET", r.Url, nil); err == nil {
+	if ret.GetError() == nil {
+		req, err := http.NewRequest("GET", r.Url, nil)
+
+		if err == nil {
 			var client http.Client
 			var res *http.Response
 
@@ -402,6 +401,10 @@ func (p *WedriveFile) Download(param *WedriveFileDownloadRequest, to io.Writer) 
 				defer res.Body.Close()
 				io.Copy(to, res.Body)
 			}
+		}
+
+		if err != nil {
+			ret.SetError(err)
 		}
 	}
 

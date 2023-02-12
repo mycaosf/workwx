@@ -16,7 +16,7 @@ import (
 )
 
 type Media struct {
-	token
+	Token
 }
 
 func (p *Media) File(fileName string) (string, error) {
@@ -150,7 +150,7 @@ func (p *Media) GetData(id string, fromTo ...int) (data []byte, err error) {
 	if strings.HasPrefix(id, "http://") || strings.HasPrefix(id, "https://") {
 		data, err = httpGetBytes(id, header)
 	} else {
-		data, err = p.getBytes(mediaClass, mediaApiGet, header, "&media_id=", id)
+		data, err = p.GetBytes(mediaClass, mediaApiGet, header, "&media_id=", id)
 	}
 
 	return

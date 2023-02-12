@@ -1,11 +1,19 @@
 package workwx
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"strings"
 )
+
+type Message struct {
+	Token
+	toUser    []string
+	toParty   []string
+	toTag     []string
+	chatId    string
+	agentId   int
+	className string
+}
 
 type ErrorMessage struct {
 	ErrCode      int
@@ -33,16 +41,6 @@ type sendMessageResponseReal struct {
 	InvalidUser  string `json:"invaliduser"`
 	InvalidParty string `json:"invalidparty"`
 	InvalidTag   string `json:"invalidtag"`
-}
-
-type Message struct {
-	token
-	toUser    []string
-	toParty   []string
-	toTag     []string
-	chatId    string
-	agentId   int
-	className string
 }
 
 type sendMessageCommonReal struct {
@@ -144,17 +142,18 @@ func (p *Message) toRealCommon(to *sendMessageCommonReal, msgType string) {
 }
 
 func (p *Message) send(data interface{}) error {
-	if buf, err := json.Marshal(data); err != nil {
-		return err
-	} else {
-		buffer := bytes.NewReader(buf)
-		var r sendMessageResponseReal
-		if err = p.postJson(p.className, messageApiSend, buffer, &r); err != nil {
-			return err
-		}
+	var r sendMessageResponseReal
+	p.postJson(p.className, messageApiSend, data, &r)
 
-		return sendMessageRet(&r)
+	if e := r.GetError(); e != nil {
+		if r.IsWeworkError() {
+			return sendMessageRet(&r)
+		} else {
+			return e
+		}
 	}
+
+	return nil
 }
 
 func sendMessageRet(r *sendMessageResponseReal) (err error) {

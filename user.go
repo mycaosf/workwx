@@ -5,7 +5,7 @@ import (
 )
 
 type User struct {
-	token
+	Token
 }
 
 type UserInfoBase struct {
@@ -37,70 +37,55 @@ type UserId struct {
 	OpoenId string `json:"openid"`
 }
 
-func (p *User) Info(userId string) (info UserInfo, err error) {
-	type UserInfoResponse struct {
-		Error
-		UserInfo
-	}
+type UserInfoResponse struct {
+	Error
+	UserInfo
+}
 
-	var r UserInfoResponse
-	if err = p.getJson(userClass, userApiGet, &r, "&userid=", userId); err == nil {
-		info = r.UserInfo
-	}
+type UserIdResponse struct {
+	Error
+	UserId
+}
+
+type DepartmentUsersResponse struct {
+	Error
+	Users []UserInfoBase `json:"userlist"`
+}
+
+type DepartmentUsersDetailResponse DepartmentUsersResponse
+
+func (p *User) Info(userId string) (ret UserInfoResponse) {
+	p.getJson(userClass, userApiGet, &ret, "&userid=", userId)
 
 	return
 }
 
-func (p *User) UserId(code string) (id UserId, err error) {
-	type UserIdResponse struct {
-		Error
-		UserId
-	}
-
-	var r UserIdResponse
-	if err = p.getJson(userClass, userApiUserId, &r, "&code=", code); err == nil {
-		id = r.UserId
-	}
+func (p *User) UserId(code string) (ret UserIdResponse) {
+	p.getJson(userClass, userApiUserId, &ret, "&code=", code)
 
 	return
 }
 
-func (p *User) DepartmentUsers(departmentId int, fetchChild bool) (users []UserInfoBase, err error) {
-	type DepartmentUsersResponse struct {
-		Error
-		Users []UserInfoBase `json:"userlist"`
-	}
-
-	var r DepartmentUsersResponse
+func (p *User) DepartmentUsers(departmentId int, fetchChild bool) (ret DepartmentUsersResponse) {
 	department := strconv.Itoa(departmentId)
 	fetch := "0"
 	if fetchChild {
 		fetch = "1"
 	}
 
-	if err = p.getJson(userClass, userApiSimpleList, &r, departmentIdStr, department, fetchChildStr, fetch); err == nil {
-		users = r.Users
-	}
+	p.getJson(userClass, userApiSimpleList, &ret, departmentIdStr, department, fetchChildStr, fetch)
 
 	return
 }
 
-func (p *User) DepartmentUsersDetail(departmentId int, fetchChild bool) (users []UserInfo, err error) {
-	type DepartmentUsersResponse struct {
-		Error
-		Users []UserInfo `json:"userlist"`
-	}
-
-	var r DepartmentUsersResponse
+func (p *User) DepartmentUsersDetail(departmentId int, fetchChild bool) (ret DepartmentUsersDetailResponse) {
 	department := strconv.Itoa(departmentId)
 	fetch := "0"
 	if fetchChild {
 		fetch = "1"
 	}
 
-	if err = p.getJson(userClass, userApiList, &r, departmentIdStr, department, fetchChildStr, fetch); err == nil {
-		users = r.Users
-	}
+	p.getJson(userClass, userApiList, &ret, departmentIdStr, department, fetchChildStr, fetch)
 
 	return
 }
