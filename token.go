@@ -1,12 +1,9 @@
 package workwx
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/mycaosf/httpc"
-	"io"
 	"net/http"
 	"time"
 )
@@ -111,29 +108,22 @@ func (p *Token) GetBytes(class, api string, header http.Header, exts ...string) 
 }
 
 func (p *Token) postJson(class, api string, req, res any, exts ...string) {
-	data, err := json.Marshal(req)
-	if err == nil {
-		buffer := bytes.NewReader(data)
-		err = p.PostJson(class, api, buffer, res)
-	}
-
-	if err != nil {
+	if err := p.PostJson(class, api, req, res); err != nil {
 		if e, ok := res.(IError); ok {
 			e.SetError(err)
 		}
 	}
 }
 
-func (p *Token) PostJson(class, api string, data io.ReadSeeker, r any, exts ...string) (err error) {
+func (p *Token) PostJson(class, api string, req, r any, exts ...string) (err error) {
 	var url string
 	if url, err = p.urlToken(class, api, false, exts...); err == nil {
 		header := make(http.Header)
 		header.Add(httpc.HTTPHeaderContentType, contentJson)
 
-		if err = httpPostJson(url, header, data, r); err != nil {
-			data.Seek(0, 0)
+		if err = httpPostJson(url, header, req, r); err != nil {
 			if url, err = p.urlToken(class, api, true, exts...); err == nil {
-				err = httpPostJson(url, header, data, r)
+				err = httpPostJson(url, header, req, r)
 			}
 		}
 	}
