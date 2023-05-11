@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/mycaosf/utils/net/httpc"
+	"github.com/mycaosf/httpc"
 	"io"
 	"net/http"
 	"time"

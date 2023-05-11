@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/mycaosf/utils/net/httpc"
+	"github.com/mycaosf/httpc"
 	"io"
 	"mime/multipart"
 	"net/http"

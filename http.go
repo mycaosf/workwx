@@ -1,31 +1,57 @@
 package workwx
 
 import (
-	"github.com/mycaosf/utils/net/httpc"
+	"github.com/mycaosf/httpc"
 	"io"
 	"net/http"
 )
 
 func httpGet(url string, header http.Header) (*http.Response, error) {
-	return httpc.Get(url, header, nil)
+	c := httpc.Client{
+		Header: header,
+	}
+
+	return c.Get(url)
 }
 
 func httpGetBytes(url string, header http.Header) ([]byte, error) {
-	return httpc.GetBytes(url, header, nil)
+	c := httpc.Client{
+		Header: header,
+	}
+
+	return c.GetBytes(url)
 }
 
 func httpGetJson(url string, header http.Header, v interface{}) error {
-	return httpc.GetJson(url, header, nil, v)
+	c := httpc.Client{
+		Header: header,
+	}
+
+	return c.GetJSON(url, v)
 }
 
 func httpPost(url string, header http.Header, body io.Reader) (*http.Response, error) {
-	return httpc.Post(url, header, body, nil)
+	c := httpc.Client{
+		Header: header,
+	}
+
+	return c.Post(url, body)
 }
 
 func httpPostBytes(url string, header http.Header, body io.Reader) ([]byte, error) {
-	return httpc.PostBytes(url, header, body, nil)
+	if resp, err := httpPost(url, header, body); err == nil {
+		defer resp.Body.Close()
+
+		return io.ReadAll(resp.Body)
+	} else {
+		return nil, err
+	}
 }
 
 func httpPostJson(url string, header http.Header, body io.Reader, v interface{}) error {
-	return httpc.PostJson(url, header, body, nil, v)
+	c := httpc.Client{
+		Header: header,
+	}
+
+	return c.PostJSON(url, body, v)
 }
