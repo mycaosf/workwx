@@ -38,17 +38,15 @@ func httpPost(url string, header http.Header, body io.Reader) (*http.Response, e
 	return c.Post(url, body)
 }
 
-func httpPostBytes(url string, header http.Header, body io.Reader) ([]byte, error) {
-	if resp, err := httpPost(url, header, body); err == nil {
-		defer resp.Body.Close()
-
-		return io.ReadAll(resp.Body)
-	} else {
-		return nil, err
+func httpPostBytes(url string, header http.Header, body []byte) ([]byte, error) {
+	c := httpc.Client{
+		Header: header,
 	}
+
+	return c.PostBytes(url, body)
 }
 
-func httpPostJson(url string, header http.Header, body io.Reader, v interface{}) error {
+func httpPostJson(url string, header http.Header, body, v interface{}) error {
 	c := httpc.Client{
 		Header: header,
 	}

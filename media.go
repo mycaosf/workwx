@@ -82,17 +82,18 @@ func (p *Media) send(mediaType int, fileName string, temporary bool) (id string,
 
 	httpContentType := mediaHttpContentType + wpart.Boundary()
 
-	var body []byte
-	r := bytes.NewReader(buf.Bytes())
+	var (
+		data, body []byte
+	)
+	data = buf.Bytes()
 
 	header := make(http.Header)
 	header.Add(httpc.HTTPHeaderContentType, httpContentType)
 	header.Add(httpc.HTTPHeaderContentLength, strconv.Itoa(buf.Len()))
 
-	if body, err = httpPostBytes(url, header, r); err != nil {
+	if body, err = httpPostBytes(url, header, data); err != nil {
 		if url, err = p.buildUrl(mediaType, temporary, true); err == nil {
-			r.Seek(0, 0)
-			body, err = httpPostBytes(url, header, r)
+			body, err = httpPostBytes(url, header, data)
 		}
 	}
 
