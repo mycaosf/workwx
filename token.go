@@ -114,7 +114,7 @@ func (p *Token) postJson(class, api string, req, res any, exts ...string) {
 	data, err := json.Marshal(req)
 	if err == nil {
 		buffer := bytes.NewReader(data)
-		err = p.PostJson(wedriveClass, api, buffer, res)
+		err = p.PostJson(class, api, buffer, res)
 	}
 
 	if err != nil {
